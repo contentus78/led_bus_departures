@@ -8,6 +8,7 @@ options.cols = 64
 options.chain_length = 1
 options.parallel = 1
 options.hardware_mapping = "adafruit-hat"
+options.brightness = 80
 matrix = RGBMatrix(options=options)
 
 # load font and create color
@@ -48,7 +49,7 @@ def display_bus_times(bus_lines):
     graphics.DrawText(matrix, font, 40, 7, white, sample_time)
     graphics.DrawText(matrix, font, 40, 15, white, sample_temperature)
 
-    core_start_x, core_start_y = 40, 17
+    core_start_x, core_start_y = 45, 20
     core_size = 6
     # Draw sun core
     for i in range(core_size):
