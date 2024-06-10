@@ -49,7 +49,8 @@ def display_bus_times(bus_lines):
     graphics.DrawText(matrix, font, 40, 15, white, sample_temperature)
 
     core_start_x, core_start_y = 40, 17
-    graphics.DrawRect(matrix, core_start_x, core_start_y, 6, 6, yellow)
+    for i in range(6):
+        graphics.DrawLine(matrix, core_start_x, core_start_y + i, core_start_x + 5, core_start_y + i, yellow)
 
     # Draw rays extending from the sun core
     # Horizontal and vertical rays
