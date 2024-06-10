@@ -49,21 +49,92 @@ def display_bus_times(bus_lines):
     graphics.DrawText(matrix, font, 40, 15, white, sample_temperature)
 
     core_start_x, core_start_y = 40, 17
-    for i in range(6):
-        graphics.DrawLine(matrix, core_start_x, core_start_y + i, core_start_x + 5, core_start_y + i, yellow)
+    core_size = 6
+    # Draw sun core
+    for i in range(core_size):
+        graphics.DrawLine(
+            matrix,
+            core_start_x,
+            core_start_y + i,
+            core_start_x + core_size - 1,
+            core_start_y + i,
+            yellow,
+        )
 
-    # Draw rays extending from the sun core
-    # Horizontal and vertical rays
-    graphics.DrawLine(matrix, 1, 7, 6, 7, yellow)
-    graphics.DrawLine(matrix, 13, 7, 18, 7, yellow)
-    graphics.DrawLine(matrix, 9, 1, 9, 3, yellow)
-    graphics.DrawLine(matrix, 9, 10, 9, 14, yellow)
+    # Calculate offsets for rays based on core position
+    # Horizontal rays
+    graphics.DrawLine(
+        matrix,
+        core_start_x - 6,
+        core_start_y + 2,
+        core_start_x - 1,
+        core_start_y + 2,
+        yellow,
+    )
+    graphics.DrawLine(
+        matrix,
+        core_start_x + core_size,
+        core_start_y + 2,
+        core_start_x + core_size + 5,
+        core_start_y + 2,
+        yellow,
+    )
+
+    # Vertical rays
+    graphics.DrawLine(
+        matrix,
+        core_start_x + 2,
+        core_start_y - 3,
+        core_start_x + 2,
+        core_start_y - 1,
+        yellow,
+    )
+    graphics.DrawLine(
+        matrix,
+        core_start_x + 2,
+        core_start_y + core_size,
+        core_start_x + 2,
+        core_start_y + core_size + 3,
+        yellow,
+    )
 
     # Diagonal rays
-    graphics.DrawLine(matrix, 4, 4, 1, 1, yellow)
-    graphics.DrawLine(matrix, 4, 10, 1, 13, yellow)
-    graphics.DrawLine(matrix, 14, 4, 17, 1, yellow)
-    graphics.DrawLine(matrix, 14, 10, 17, 13, yellow)
+    # Upper left
+    graphics.DrawLine(
+        matrix,
+        core_start_x - 3,
+        core_start_y - 3,
+        core_start_x - 1,
+        core_start_y - 1,
+        yellow,
+    )
+    # Lower left
+    graphics.DrawLine(
+        matrix,
+        core_start_x - 3,
+        core_start_y + core_size + 2,
+        core_start_x - 1,
+        core_start_y + core_size,
+        yellow,
+    )
+    # Upper right
+    graphics.DrawLine(
+        matrix,
+        core_start_x + core_size + 2,
+        core_start_y - 3,
+        core_start_x + core_size,
+        core_start_y - 1,
+        yellow,
+    )
+    # Lower right
+    graphics.DrawLine(
+        matrix,
+        core_start_x + core_size + 2,
+        core_start_y + core_size + 2,
+        core_start_x + core_size,
+        core_start_y + core_size,
+        yellow,
+    )
 
 
 try:
