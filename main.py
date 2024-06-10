@@ -13,7 +13,7 @@ matrix = RGBMatrix(options=options)
 # load font and create color
 font = graphics.Font()
 font.LoadFont("./fonts/5x8.bdf")
-color = graphics.Color(255, 255, 255)
+color = graphics.Color(255, 255, 0)
 
 # Sample bus lines and their simulated departure times in minutes
 bus_lines = [
