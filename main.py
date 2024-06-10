@@ -17,16 +17,16 @@ color = graphics.Color(255, 255, 255)
 
 # Sample bus lines and their simulated departure times in minutes
 bus_lines = [
-    {"line": "Tram 1", "times": [5, 15]},
-    {"line": "Tram 3", "times": [3, 13]},
-    {"line": "Tram 8", "times": [7, 17]},
-    {"line": "Bus 70", "times": [1, 11]},
+    {"line": "T1", "times": [5, 15]},
+    {"line": "T3", "times": [3, 13]},
+    {"line": "T8", "times": [7, 17]},
+    {"line": "B70", "times": [1, 11]},
 ]
 
 
 def display_bus_times(bus_lines):
     # Sort bus lines based on the next departure time
-    # bus_lines.sort(key=lambda x: x["times"][0])
+    bus_lines.sort(key=lambda x: x["times"][0])
 
     # Clear the matrix before updating
     matrix.Clear()
