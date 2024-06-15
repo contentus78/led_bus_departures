@@ -9,9 +9,9 @@ def is_development_system():
 
 
 if is_development_system():
-    from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
+    from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics  # type: ignore
 else:
-    from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+    from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics  # type: ignore
 
 
 # setup the matrix
