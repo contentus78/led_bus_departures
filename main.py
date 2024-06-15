@@ -1,5 +1,18 @@
 import time
-from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+
+# use platform to determine whether to load emulator or hardware controls
+import platform
+
+
+def is_development_system():
+    return "x86_64" in platform.platform().lower()
+
+
+if is_development_system():
+    from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
+else:
+    from RGBMatrix import RGBMatrix, RGBMatrixOptions, graphics
+
 
 # setup the matrix
 options = RGBMatrixOptions()
