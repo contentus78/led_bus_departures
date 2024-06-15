@@ -11,7 +11,7 @@ def is_development_system():
 if is_development_system():
     from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
 else:
-    from RGBMatrix import RGBMatrix, RGBMatrixOptions, graphics
+    from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
 
 # setup the matrix
