@@ -1,18 +1,14 @@
 import time
-
-# use platform to determine whether to load emulator or hardware controls
 import platform
 
-
+# Use platform() to determine whether script is running on Pi or dev machine
 def is_development_system():
     return "x86_64" in platform.platform().lower()
-
 
 if is_development_system():
     from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics  # type: ignore
 else:
     from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics  # type: ignore
-
 
 # setup the matrix
 options = RGBMatrixOptions()
@@ -28,21 +24,18 @@ matrix = RGBMatrix(options=options)
 font = graphics.Font()
 font.LoadFont("./fonts/5x8.bdf")
 color = graphics.Color(255, 165, 0)
+white = graphics.Color(255, 255, 255)
+yellow = graphics.Color(255, 255, 0)
 
-# Sample bus lines and their simulated departure times in minutes
+# Define sample values
 bus_lines = [
     {"line": " 1", "times": [5, 15]},
     {"line": " 3", "times": [3, 13]},
     {"line": " 8", "times": [7, 17]},
     {"line": "70", "times": [1, 11]},
 ]
-
-white = graphics.Color(255, 255, 255)
 sample_time = "22:35"
 sample_temperature = "17°C"
-
-yellow = graphics.Color(255, 255, 0)
-
 
 def display_bus_times(bus_lines):
     # Sort bus lines based on the next departure time
