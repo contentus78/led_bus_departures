@@ -1,5 +1,6 @@
 import time
 import platform
+from visual_elements.sun import draw_sun
 
 # Use platform() to determine whether script is running on Pi or dev machine
 def is_development_system():
@@ -7,8 +8,11 @@ def is_development_system():
 
 if is_development_system():
     from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics  # type: ignore
+    print("Development system detected, emulator imported.")
 else:
     from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics  # type: ignore
+    print("Production system detected, RGBMatrix imported.")
+
 
 # setup the matrix
 options = RGBMatrixOptions()
@@ -50,98 +54,9 @@ def display_bus_times(bus_lines):
         # Adjust the y position calculation based on the new font height
         graphics.DrawText(matrix, font, 2, 7 + i * 8, color, text)
 
-    # Sun part
-    # Display additional information
-    graphics.DrawText(matrix, font, 40, 7, white, sample_time)
-    graphics.DrawText(matrix, font, 40, 15, white, sample_temperature)
 
-    core_start_x, core_start_y = 45, 20
-    core_size = 6
-    # Draw sun core
-    for i in range(core_size):
-        graphics.DrawLine(
-            matrix,
-            core_start_x,
-            core_start_y + i,
-            core_start_x + core_size - 1,
-            core_start_y + i,
-            yellow,
-        )
+    draw_sun(matrix=matrix, core_start_x=45, core_start_y=20, core_size=5, ray_length=5, color=yellow)
 
-    # Calculate offsets for rays based on core position
-    # Horizontal rays
-    graphics.DrawLine(
-        matrix,
-        core_start_x - 6,
-        core_start_y + 2,
-        core_start_x - 1,
-        core_start_y + 2,
-        yellow,
-    )
-    graphics.DrawLine(
-        matrix,
-        core_start_x + core_size,
-        core_start_y + 2,
-        core_start_x + core_size + 5,
-        core_start_y + 2,
-        yellow,
-    )
-
-    # Vertical rays
-    graphics.DrawLine(
-        matrix,
-        core_start_x + 2,
-        core_start_y - 3,
-        core_start_x + 2,
-        core_start_y - 1,
-        yellow,
-    )
-    graphics.DrawLine(
-        matrix,
-        core_start_x + 2,
-        core_start_y + core_size,
-        core_start_x + 2,
-        core_start_y + core_size + 3,
-        yellow,
-    )
-
-    # Diagonal rays
-    # Upper left
-    graphics.DrawLine(
-        matrix,
-        core_start_x - 3,
-        core_start_y - 3,
-        core_start_x - 1,
-        core_start_y - 1,
-        yellow,
-    )
-    # Lower left
-    graphics.DrawLine(
-        matrix,
-        core_start_x - 3,
-        core_start_y + core_size + 2,
-        core_start_x - 1,
-        core_start_y + core_size,
-        yellow,
-    )
-    # Upper right
-    graphics.DrawLine(
-        matrix,
-        core_start_x + core_size + 2,
-        core_start_y - 3,
-        core_start_x + core_size,
-        core_start_y - 1,
-        yellow,
-    )
-    # Lower right
-    graphics.DrawLine(
-        matrix,
-        core_start_x + core_size + 2,
-        core_start_y + core_size + 2,
-        core_start_x + core_size,
-        core_start_y + core_size,
-        yellow,
-    )
 
 
 try:
