@@ -1,6 +1,7 @@
 import time
 import platform
 from visual_elements.sun import draw_sun
+from api.weather_data import get_weather_forecast, extract_today_max_temp
 
 # Use platform() to determine whether script is running on Pi or dev machine
 def is_development_system():
@@ -27,9 +28,10 @@ matrix = RGBMatrix(options=options)
 # load font and create color
 font = graphics.Font()
 font.LoadFont("./fonts/5x8.bdf")
-color = graphics.Color(255, 165, 0)
+base_color = graphics.Color(255, 165, 0)
 white = graphics.Color(255, 255, 255)
 yellow = graphics.Color(255, 255, 0)
+# green for 1, 3 box: (101, 179, 46)
 
 # Define sample values
 bus_lines = [
@@ -41,7 +43,16 @@ bus_lines = [
 sample_time = "22:35"
 sample_temperature = "17°C"
 
-def display_bus_times(bus_lines):
+# Import weather data from Open-Meteo API
+# Coordinates for bus stop Hermann-Liebmann-Str. / Eisenbahnstr.
+latitude = 51.34549642077572
+longitude = 12.405958803670908
+timezone = "Europe/Berlin"
+
+weather_data = get_weather_forecast(latitude, longitude, timezone)
+temperature_data = extract_today_max_temp(weather_data)
+
+def display_bus_times(bus_lines, temperature_data):
     # Sort bus lines based on the next departure time
     bus_lines.sort(key=lambda x: x["times"][0])
 
@@ -52,16 +63,15 @@ def display_bus_times(bus_lines):
     for i, bus in enumerate(bus_lines):
         text = f"{bus['line']}:{' '.join(map(str, bus['times']))}"
         # Adjust the y position calculation based on the new font height
-        graphics.DrawText(matrix, font, 2, 7 + i * 8, color, text)
+        graphics.DrawText(matrix, font, 2, 7 + i * 8, base_color, text)
 
+    graphics.DrawText(matrix, font, 41, 10, base_color, temperature_data)
 
     draw_sun(matrix=matrix, core_start_x=45, core_start_y=20, core_size=5, ray_length=5, color=yellow)
 
-
-
 try:
     while True:
-        display_bus_times(bus_lines)
+        display_bus_times(bus_lines, temperature_data)
         time.sleep(60)  # Update the display every x second
 except KeyboardInterrupt:
     matrix.Clear()  # Clear the display when stopping the script
