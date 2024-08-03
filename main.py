@@ -38,7 +38,7 @@ bus_lines = [
 ]
 
 white = graphics.Color(255, 255, 255)
-sample_time = "22:35"
+sample_time = "22:36"
 sample_temperature = "17°C"
 
 yellow = graphics.Color(255, 255, 0)
