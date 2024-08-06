@@ -141,7 +141,7 @@ def main_display_loop(
                     departures = fetch_departures(station_id, duration_minutes)
                     grouped_departures = group_departures(departures)
                     last_departures_api_call = current_time
-                    logger.info("Departures data fetched successfully")
+                    logger.debug("Departures data fetched successfully")
                 except Exception as e:
                     logger.error(f"API ERROR (Departures): {e}")
 
@@ -152,7 +152,7 @@ def main_display_loop(
                     )
                     temperature_data = extract_today_max_temp(weather_data)
                     last_weather_api_call = current_time
-                    logger.info("Weather data fetched successfully")
+                    logger.debug("Weather data fetched successfully")
                 except Exception as e:
                     logger.error(f"W_API ERROR (Weather): {e}")
 

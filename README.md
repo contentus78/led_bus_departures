@@ -1,12 +1,16 @@
 # led_bus_departures
 A project to display bus departure times on a LED panel.
-
 Work in progress.
 
 ## To-do
-- fetch every 30 seconds but calculate in real time or every 5 seconds
-    - create different loops
-- tidy up code
+- Automatische Ruhezeiten bzw. Dimm-Einstellung für Nacht
+- API Fetch auf MM:50 legen? Damit es möglichst nah an Minutengrenze liegt?
+    - Ganze Routine könnte auch 1x pro Minute laufen, da Verspätungen in Minuten angegeben werden
+    - Auch Uhr könnte so integriert werden
+    - Sollte dann immer zur vollen Minute bzw. +1 Sekunde laufen
+- Andere Farbe wenn Abfahrt verspätet ist?
+- Frames und Farben für Linien individualisieren (Vorlage LVB)
+- Logging anpassen, da log-file sonst irgendwann zu groß wird
+    - aktuell wird es auch einen Fehler geben, da kein zweites log-file aufgemacht werden kann
 
 ## Nice to have
-- since fetching only retrieves limited amount of future data, consider using fixed schedule as fallback 
