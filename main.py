@@ -11,6 +11,8 @@ from config.config import (
     longitude,
     latitude,
 )
+import logging
+from logging.handlers import RotatingFileHandler
 
 
 # Use platform() to determine whether script is running on Pi or dev machine
@@ -38,9 +40,11 @@ options.hardware_mapping = "adafruit-hat"
 options.brightness = 80
 matrix = RGBMatrix(options=options)
 
-# load font and create color
+# load font
 font = graphics.Font()
 font.LoadFont("./fonts/5x8.bdf")
+
+# create color
 base_color = graphics.Color(255, 165, 0)
 white = graphics.Color(255, 255, 255)
 yellow = graphics.Color(255, 255, 0)
@@ -58,24 +62,16 @@ sample_time = "22:35"
 sample_temperature = "17°C"
 
 # Import departure data from HafasClient
-departures = fetch_departures(station_id, duration_minutes)
-grouped_departures = group_departures(departures)
-
-departures_dict = {}
-for key, (name, direction) in dict_departures_to_city.items():
-    next_departures = get_next_departures(
-        grouped_departures, name, [direction], str_timezone
-    )
-    departures_dict[name] = next_departures
+# departures = fetch_departures(station_id, duration_minutes)
+# grouped_departures = group_departures(departures)
 
 # Import weather data from Open-Meteo API
 weather_data = get_weather_forecast(latitude, longitude, str_timezone)
 temperature_data = extract_today_max_temp(weather_data)
 
 
-def display_bus_times(departures, temperature_data):
-    # Sort bus lines based on the next departure time, pushing empty lists to the end
-    sorted_departures = {
+def sort_departures(departures):
+    return {
         k: v
         for k, v in sorted(
             departures.items(),
@@ -83,46 +79,130 @@ def display_bus_times(departures, temperature_data):
         )
     }
 
-    # Clear the matrix before updating
-    matrix.Clear()
 
-    # Display each line, adjust spacing according to the new font size
+def update_departure_times(matrix, font, base_color, sorted_departures):
+    # Assuming the matrix has specific methods to redraw areas; if not, you will need custom logic.
     for i, (line, times) in enumerate(sorted_departures.items()):
-        # Extract number from the key and format it
         number = "".join(filter(str.isdigit, line))
         formatted_number = f" {number}" if len(number) == 1 else number
 
-        # Check if there are times available
+        text = f"{formatted_number}:"
         if times:
-            # Format times with leading blank space
             formatted_times = [f"{time:2}" for time in times]
+            if len(times) >= 2:
+                text += f"{formatted_times[0]} {formatted_times[1]}"
+            else:
+                text += f"{formatted_times[0]}"
 
-            if len(times) >= 2:  # Ensure there are at least two departure times
-                text = f"{formatted_number}:{formatted_times[0]} {formatted_times[1]}"
-            else:  # If there's only one time
-                text = f"{formatted_number}:{formatted_times[0]}"
-        else:
-            # Handle empty times gracefully
-            text = f"{formatted_number}: "
-
-        # Drawing text to the matrix
+        # Redraw only the line where changes occur
         graphics.DrawText(matrix, font, 2, 7 + i * 8, base_color, text)
 
+
+def display_static_elements(matrix, font, base_color, temperature_data):
     graphics.DrawText(matrix, font, 44, 10, base_color, temperature_data)
-
-    draw_sun(
-        matrix=matrix,
-        core_start_x=51,
-        core_start_y=20,
-        core_size=5,
-        ray_length=5,
-        color=yellow,
-    )
+    draw_sun(matrix, 51, 20, 5, 5, yellow)
 
 
-try:
-    while True:
-        display_bus_times(departures_dict, temperature_data)
-        time.sleep(60)  # Update the display every x second
-except KeyboardInterrupt:
-    matrix.Clear()  # Clear the display when stopping the script
+def setup_logging():
+    logger = logging.getLogger("MyAppLogger")
+    logger.setLevel(logging.INFO)
+    handler = RotatingFileHandler("my_app.log", maxBytes=10240, backupCount=3)
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
+
+
+def main_display_loop(
+    matrix,
+    station_id,
+    duration_minutes,
+    dict_departures_to_city,
+    str_timezone,
+    departures_api_interval,
+    weather_api_interval,
+    update_interval,
+    logger,
+):
+    logger.info("Starting the display loop")
+    last_departures_api_call = 0
+    last_weather_api_call = 0
+    last_update = 0
+    grouped_departures = None
+    departures_dict = {}
+    previous_sorted_departures = {}
+
+    try:
+        while True:
+            current_time = time.time()
+
+            if current_time - last_departures_api_call > departures_api_interval:
+                try:
+                    departures = fetch_departures(station_id, duration_minutes)
+                    grouped_departures = group_departures(departures)
+                    last_departures_api_call = current_time
+                    logger.info("Departures data fetched successfully")
+                except Exception as e:
+                    logger.error(f"API ERROR (Departures): {e}")
+
+            if current_time - last_weather_api_call > weather_api_interval:
+                try:
+                    weather_data = get_weather_forecast(
+                        latitude, longitude, str_timezone
+                    )
+                    temperature_data = extract_today_max_temp(weather_data)
+                    last_weather_api_call = current_time
+                    logger.info("Weather data fetched successfully")
+                except Exception as e:
+                    logger.error(f"W_API ERROR (Weather): {e}")
+
+            if grouped_departures and current_time - last_update > update_interval:
+                # matrix.Clear()
+
+                for key, (name, direction) in dict_departures_to_city.items():
+                    next_departures = get_next_departures(
+                        grouped_departures, name, [direction], str_timezone
+                    )
+                    departures_dict[name] = next_departures
+
+                current_sorted_departures = sort_departures(departures_dict)
+                if current_sorted_departures != previous_sorted_departures:
+                    # this is where the previous results need to be cleared first (or in the following function)
+                    matrix.Clear()
+                    update_departure_times(
+                        matrix, font, base_color, current_sorted_departures
+                    )
+                    # update other elements
+                    display_static_elements(matrix, font, base_color, temperature_data)
+                    previous_sorted_departures = current_sorted_departures
+                last_update = current_time
+                logger.debug("Display updated")
+
+            time.sleep(1)
+
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+    finally:
+        logger.info("Shutting down the display loop")
+
+
+# Use the setup_logging function at the start of your application
+logger = setup_logging()
+
+# Constants for intervals
+DEPARTURES_API_CALL_INTERVAL = 120  # 2 minutes
+WEATHER_API_CALL_INTERVAL = 60 * 60 * 6  # every 6 hours
+UPDATE_INTERVAL = 10  # 10 seconds
+
+# Start the display loop
+main_display_loop(
+    matrix,
+    station_id,
+    duration_minutes,
+    dict_departures_to_city,
+    str_timezone,
+    DEPARTURES_API_CALL_INTERVAL,
+    WEATHER_API_CALL_INTERVAL,
+    UPDATE_INTERVAL,
+    logger,
+)
