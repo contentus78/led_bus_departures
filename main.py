@@ -50,25 +50,6 @@ white = graphics.Color(255, 255, 255)
 yellow = graphics.Color(255, 255, 0)
 # green for 1, 3 box: (101, 179, 46)
 
-# sample values (not used)
-sample_bus_lines = {
-    " 1": [8, 18, 30, 45, 60, 75, 90, 106],
-    " 3": [2, 12, 22, 36, 51, 66, 81, 97, 112],
-    " 8": [14, 34, 54],
-    "70": [12, 27, 42, 57, 72, 87, 103, 118],
-}
-
-sample_time = "22:35"
-sample_temperature = "17°C"
-
-# Import departure data from HafasClient
-# departures = fetch_departures(station_id, duration_minutes)
-# grouped_departures = group_departures(departures)
-
-# Import weather data from Open-Meteo API
-weather_data = get_weather_forecast(latitude, longitude, str_timezone)
-temperature_data = extract_today_max_temp(weather_data)
-
 
 def sort_departures(departures):
     return {
@@ -81,7 +62,6 @@ def sort_departures(departures):
 
 
 def update_departure_times(matrix, font, base_color, sorted_departures):
-    # Assuming the matrix has specific methods to redraw areas; if not, you will need custom logic.
     for i, (line, times) in enumerate(sorted_departures.items()):
         number = "".join(filter(str.isdigit, line))
         formatted_number = f" {number}" if len(number) == 1 else number
@@ -94,13 +74,16 @@ def update_departure_times(matrix, font, base_color, sorted_departures):
             else:
                 text += f"{formatted_times[0]}"
 
-        # Redraw only the line where changes occur
         graphics.DrawText(matrix, font, 2, 7 + i * 8, base_color, text)
 
 
-def display_static_elements(matrix, font, base_color, temperature_data):
+def draw_temperature_output(matrix, font, base_color, temperature_data):
     graphics.DrawText(matrix, font, 44, 10, base_color, temperature_data)
+
+
+def draw_weather_symbol():
     draw_sun(matrix, 51, 20, 5, 5, yellow)
+    # More weather symbols and API input to decide between them missing for the moment
 
 
 def setup_logging():
@@ -113,96 +96,96 @@ def setup_logging():
     return logger
 
 
-def main_display_loop(
-    matrix,
-    station_id,
-    duration_minutes,
-    dict_departures_to_city,
-    str_timezone,
-    departures_api_interval,
-    weather_api_interval,
-    update_interval,
-    logger,
-):
-    logger.info("Starting the display loop")
-    last_departures_api_call = 0
-    last_weather_api_call = 0
-    last_update = 0
-    grouped_departures = None
-    departures_dict = {}
-    previous_sorted_departures = {}
+class DisplayController:
+    def __init__(
+        self, matrix, station_id, duration_minutes, city_departures, timezone, logger
+    ):
+        self.matrix = matrix
+        self.station_id = station_id
+        self.duration_minutes = duration_minutes
+        self.city_departures = city_departures
+        self.timezone = timezone
+        self.logger = logger
+        self.grouped_departures = None
+        self.departures_dict = {}
+        self.sorted_departures = {}
+        self.temperature_data = None
 
-    try:
-        while True:
-            current_time = time.time()
+    def fetch_and_group_departures(self):
+        try:
+            departures = fetch_departures(self.station_id, self.duration_minutes)
+            self.grouped_departures = group_departures(departures)
+            self.logger.debug("Departures data fetched successfully")
+        except Exception as e:
+            self.logger.error(f"API ERROR (Departures): {e}")
 
-            if current_time - last_departures_api_call > departures_api_interval:
-                try:
-                    departures = fetch_departures(station_id, duration_minutes)
-                    grouped_departures = group_departures(departures)
-                    last_departures_api_call = current_time
-                    logger.debug("Departures data fetched successfully")
-                except Exception as e:
-                    logger.error(f"API ERROR (Departures): {e}")
+    def fetch_weather_data(self):
+        try:
+            weather_data = get_weather_forecast(latitude, longitude, self.timezone)
+            self.temperature_data = extract_today_max_temp(weather_data)
+            self.logger.debug("Weather data fetched successfully")
+        except Exception as e:
+            self.logger.error(f"API ERROR (Weather): {e}")
 
-            if current_time - last_weather_api_call > weather_api_interval:
-                try:
-                    weather_data = get_weather_forecast(
-                        latitude, longitude, str_timezone
-                    )
-                    temperature_data = extract_today_max_temp(weather_data)
-                    last_weather_api_call = current_time
-                    logger.debug("Weather data fetched successfully")
-                except Exception as e:
-                    logger.error(f"W_API ERROR (Weather): {e}")
+    def calculate_next_departures(self):
+        try:
+            for key, (name, direction) in self.city_departures.items():
+                next_departures = get_next_departures(
+                    self.grouped_departures, name, [direction], self.timezone
+                )  # pass [direction] as list because function expects list of directions
+                self.departures_dict[name] = next_departures
+        except Exception as e:
+            self.logger.error(f"Error while calculating next departures: {e}")
 
-            if grouped_departures and current_time - last_update > update_interval:
-                # matrix.Clear()
+    def sort_next_departures(self):
+        self.sorted_departures = sort_departures(self.departures_dict)
 
-                for key, (name, direction) in dict_departures_to_city.items():
-                    next_departures = get_next_departures(
-                        grouped_departures, name, [direction], str_timezone
-                    )
-                    departures_dict[name] = next_departures
+    def update_display(self):
+        self.matrix.Clear()
+        update_departure_times(self.matrix, font, base_color, self.sorted_departures)
+        draw_temperature_output(self.matrix, font, base_color, self.temperature_data)
+        draw_weather_symbol()
 
-                current_sorted_departures = sort_departures(departures_dict)
-                if current_sorted_departures != previous_sorted_departures:
-                    # this is where the previous results need to be cleared first (or in the following function)
-                    matrix.Clear()
-                    update_departure_times(
-                        matrix, font, base_color, current_sorted_departures
-                    )
-                    # update other elements
-                    display_static_elements(matrix, font, base_color, temperature_data)
-                    previous_sorted_departures = current_sorted_departures
-                last_update = current_time
-                logger.debug("Display updated")
+    def run(self):
+        """
+        APIs are fetched once every minute 10 seconds before the full minute.
+        The screen is updated at 01 seconds of every full minute.
+        This interval was chosen since minute is the maximum granularity available in the data.
+        """
+        self.logger.info("Starting the display loop")
+        # Display startup message
+        graphics.DrawText(matrix, font, 2, 22, yellow, "WaitforAPI...")
 
-            time.sleep(1)
+        try:
+            while True:
 
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
-    finally:
-        logger.info("Shutting down the display loop")
+                current_time = time.localtime()
+                seconds_till_50 = 50 - current_time.tm_sec
+                if seconds_till_50 < 0:
+                    seconds_till_50 += 60  # correct for negative values
+                time.sleep(seconds_till_50)
+
+                self.fetch_and_group_departures()
+                self.fetch_weather_data()
+
+                current_time = time.localtime()
+                seconds_till_01 = 60 - current_time.tm_sec
+                time.sleep(seconds_till_01)
+
+                self.calculate_next_departures()
+                self.sort_next_departures()
+                self.update_display()  # Since I do not know if partial updates are possible, one method for all
+        except Exception as e:
+            self.logger.error(f"An unexpected error occurred: {e}")
+        finally:
+            self.logger.info("Shutting down the display loop")
 
 
-# Use the setup_logging function at the start of your application
+# Execute script:
 logger = setup_logging()
 
-# Constants for intervals
-DEPARTURES_API_CALL_INTERVAL = 120  # 2 minutes
-WEATHER_API_CALL_INTERVAL = 60 * 60 * 6  # every 6 hours
-UPDATE_INTERVAL = 10  # 10 seconds
-
-# Start the display loop
-main_display_loop(
-    matrix,
-    station_id,
-    duration_minutes,
-    dict_departures_to_city,
-    str_timezone,
-    DEPARTURES_API_CALL_INTERVAL,
-    WEATHER_API_CALL_INTERVAL,
-    UPDATE_INTERVAL,
-    logger,
+controller = DisplayController(
+    matrix, station_id, duration_minutes, dict_departures_to_city, str_timezone, logger
 )
+
+controller.run()
