@@ -52,7 +52,7 @@ def calculate_departure_times(departures, current_time, str_timezone):
         delta_minutes = (
             departure_time + timedelta(seconds=delay_seconds) - current_time
         ).total_seconds() / 60
-        if (delta_minutes := floor(delta_minutes)) > 0:
+        if (delta_minutes := floor(delta_minutes)) >= 0:
             results.append(delta_minutes)
     return results
 
