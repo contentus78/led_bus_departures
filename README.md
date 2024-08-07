@@ -4,12 +4,16 @@ Work in progress.
 
 ## To-do
 - Automatische Ruhezeiten bzw. Dimm-Einstellung für Nacht
-- API Fetch auf MM:50 legen? Damit es möglichst nah an Minutengrenze liegt?
-    - Ganze Routine könnte auch 1x pro Minute laufen, da Verspätungen in Minuten angegeben werden
-    - Auch Uhr könnte so integriert werden
-    - Sollte dann immer zur vollen Minute bzw. +1 Sekunde laufen
-- Andere Farbe wenn Abfahrt verspätet ist?
 - Frames und Farben für Linien individualisieren (Vorlage LVB)
-- Logik Abfahrtszeiten auf Abrunden aendern?
+- Weitere Wettersymbole
+    - Cloud
+    - Cloud with light rain
+    - Cloud with heavy rain
+    - Cloud with rain and lightning
+    - Cloud with snow
 
-## Nice to have
+## Nice to have / Undecided
+- Is rounding down for the departure times the right call? Edge Case 2:59, appears as 2min = unreachable but is actually reachable
+- Andere Farbe, wenn Abfahrt verspätet ist?
+- Uhr?
+- Animations for weather symbols

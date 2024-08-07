@@ -1,7 +1,12 @@
 import time
 import platform
 from visual_elements.sun import draw_sun
-from api.weather_data import get_weather_forecast, extract_today_max_temp
+from visual_elements.cloud import draw_cloud
+from api.weather_data import (
+    get_weather_forecast,
+    extract_today_max_temp,
+    extract_current_temp,
+)
 from api.fetch_departures import fetch_departures, group_departures, get_next_departures
 from config.config import (
     dict_departures_to_city,
@@ -82,6 +87,7 @@ def draw_temperature_output(matrix, font, base_color, temperature_data):
 
 
 def draw_weather_symbol():
+    # draw_cloud()
     draw_sun(matrix, 51, 20, 5, 5, yellow)
     # More weather symbols and API input to decide between them missing for the moment
 
@@ -122,7 +128,8 @@ class DisplayController:
     def fetch_weather_data(self):
         try:
             weather_data = get_weather_forecast(latitude, longitude, self.timezone)
-            self.temperature_data = extract_today_max_temp(weather_data)
+            # self.temperature_data = extract_today_max_temp(weather_data)
+            self.temperature_data = extract_current_temp(weather_data)
             self.logger.debug("Weather data fetched successfully")
         except Exception as e:
             self.logger.error(f"API ERROR (Weather): {e}")
