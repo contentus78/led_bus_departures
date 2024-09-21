@@ -6,7 +6,7 @@ from pyhafas.profile import DBProfile
 from math import floor
 
 
-def fetch_departures(station_id, duration_minutes):
+def fetch_departures(station_id: str, duration_minutes: int) -> list:
     try:
         client = HafasClient(profile=DBProfile())
         departures = client.departures(
